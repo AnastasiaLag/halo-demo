@@ -1045,17 +1045,24 @@ html,body{height:100%;background:#CCC9C0;font-family:'IBM Plex Sans',sans-serif;
                 <div class="mod-legend-row">
                   <div class="mod-legend-num">4</div>
                   <div class="mod-legend-text">
+                    <div class="mod-legend-name">LED Light - Local Alert</div>
+                    <div class="mod-legend-desc">Bypasses the cloud for instant on-helmet audio notification. Alerts the worker directly at the moment of danger — before the signal even reaches the supervisor.</div>
+                  </div>
+                </div>
+                <!-- <div class="mod-legend-row">
+                  <div class="mod-legend-num">4</div>
+                  <div class="mod-legend-text">
                     <div class="mod-legend-name">DHT11 — Temperature & Humidity</div>
                     <div class="mod-legend-desc">Monitors ambient temperature and humidity. Alerts when temperature exceeds safe working limits (default 38°C), protecting against heat stress.</div>
                   </div>
-                </div>
-                <div class="mod-legend-row">
+                </div> -->
+                <!-- <div class="mod-legend-row">
                   <div class="mod-legend-num">5</div>
                   <div class="mod-legend-text">
                     <div class="mod-legend-name">Piezo Buzzer — Local Alert</div>
                     <div class="mod-legend-desc">Bypasses the cloud for instant on-helmet audio notification. Alerts the worker directly at the moment of danger — before the signal even reaches the supervisor.</div>
                   </div>
-                </div>
+                </div> -->
               </div>
             </div>
             <div style="height:4px"></div>
@@ -2493,8 +2500,8 @@ const PIN_DEFS = [
   {n:'1', pct:[18, 70]},  // Arduino UNO
   {n:'2', pct:[70, 64]},  // MPU-6050
   {n:'3', pct:[55, 30]},  // MQ gas sensor
-  {n:'4', pct:[45, 70]},  // DHT11
-  {n:'5', pct:[25, 20]},  // Buzzer
+  {n:'4', pct:[25, 20]},  // DHT11
+  // {n:'5', pct:[25, 20]},  // Buzzer
 ];
 function placePins(){
   const wrap = document.getElementById('modDiagramWrap');
