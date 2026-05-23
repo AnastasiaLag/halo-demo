@@ -185,7 +185,7 @@ export default function Home() {
       <CalBackdrop open={calOpen} onClose={() => setCalOpen(false)} onToast={showToast} />
 
       {/* Demo panel */}
-      <button className="demo-fab" onClick={() => setDemoOpen(true)}>DEMO</button>
+      <button className="demo-fab" onClick={() => setDemoOpen(true)}>Simulate</button>
       {demoOpen && <div className="demo-backdrop" onClick={() => setDemoOpen(false)} />}
       <div className={`demo-sheet${demoOpen ? ' open' : ''}`}>
         <div className="demo-sheet-title">Simulate Arduino Input</div>

@@ -7,16 +7,19 @@ interface Props {
   modules: ModuleData[];
 }
 
-const WDOTS = [
-  { cls: 'ok',   left: 28,  top: 26,  tt: '#001 G. Pappas' },
-  { cls: 'ok',   left: 78,  top: 38,  tt: '#002 K. Nakos' },
-  { cls: 'ok',   left: 162, top: 22,  tt: '#004 M. Lekkas' },
-  { cls: 'ok',   left: 254, top: 96,  tt: '#005 S. Dimos' },
-  { cls: 'ok',   left: 42,  top: 112, tt: '#006 P. Athinos' },
-  { cls: 'ok',   left: 294, top: 124, tt: '#008 V. Chronis' },
-  { cls: 'warn', left: 116, top: 104, tt: '#009 A. Tsiotis — CO₂↑' },
-  { cls: 'crit', left: 192, top: 124, tt: '#003 N. Katsis — FALL' },
+// Static blueprint positions — moduleId links each pin to live module data
+const WDOT_DEFS = [
+  { id: '001', left: 28,  top: 26  },
+  { id: '002', left: 78,  top: 38  },
+  { id: '004', left: 162, top: 22  },
+  { id: '005', left: 254, top: 96  },
+  { id: '006', left: 42,  top: 112 },
+  { id: '008', left: 294, top: 124 },
+  { id: '009', left: 116, top: 104 },
+  { id: '003', left: 192, top: 124 },
 ];
+
+const STATUS_ORDER: Record<string, number> = { crit: 0, warn: 1, ok: 2, off: 3 };
 
 function chipClass(s: string) {
   return s === 'crit' ? 'chip-crit' : s === 'warn' ? 'chip-warn' : s === 'ok' ? 'chip-ok' : 'chip-off';
@@ -34,6 +37,16 @@ function battColor(b: number | null) {
 function noteColor(s: string) {
   return s === 'crit' ? 'var(--red)' : s === 'warn' ? 'var(--amber)' : 'var(--muted)';
 }
+function dotTooltip(worker: string, id: string, note: string, status: string) {
+  const base = `#${id} ${worker}`;
+  if (status === 'crit') return `${base} — FALL`;
+  if (status === 'warn') {
+    if (note.includes('CO₂') || note.includes('CO2')) return `${base} — CO₂↑`;
+    if (note.toLowerCase().includes('temp')) return `${base} — Temp↑`;
+    return `${base} — Warning`;
+  }
+  return base;
+}
 
 export default function SitePage({ onOpenMap, modules }: Props) {
   const ringRef = useRef<SVGCircleElement>(null);
@@ -50,6 +63,22 @@ export default function SitePage({ onOpenMap, modules }: Props) {
     });
     return () => cancelAnimationFrame(raf);
   }, []);
+
+  const moduleMap = new Map(modules.map(m => [m.id, m]));
+
+  // Derive live dot state from module data
+  const wdots = WDOT_DEFS.map(def => {
+    const m = moduleMap.get(def.id);
+    const status = m?.status ?? 'ok';
+    const worker = m?.worker ?? `#${def.id}`;
+    const note   = m?.note ?? '';
+    return { ...def, cls: status, tt: dotTooltip(worker, def.id, note, status) };
+  });
+
+  // Sort equipment list: crit first, then warn, ok, off
+  const sortedModules = [...modules].sort(
+    (a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9)
+  );
 
   const alertCount  = modules.filter(m => m.status === 'crit').length;
   const onlineCount = modules.filter(m => m.status !== 'off').length;
@@ -101,7 +130,7 @@ export default function SitePage({ onOpenMap, modules }: Props) {
             <div className="zone zone-fill" style={{ left: 150, top: 14, width: 82, height: 50 }}><span className="zone-label">Block B</span></div>
             <div className="zone zone-fill" style={{ left: 14, top: 98, width: 160, height: 48 }}><span className="zone-label">Block C</span></div>
             <div className="zone zone-fill" style={{ left: 240, top: 84, width: 100, height: 62 }}><span className="zone-label">Warehouse</span></div>
-            {WDOTS.map((w, i) => (
+            {wdots.map((w, i) => (
               <div key={i} className={`wdot-wrap ${w.cls}`} style={{ left: w.left, top: w.top }}>
                 <div className="wdot-ring"></div>
                 <div className="wdot"></div>
@@ -124,7 +153,7 @@ export default function SitePage({ onOpenMap, modules }: Props) {
             <div className="eq-title">Equipment Status</div>
             <div className="eq-count">{modules.length} modules</div>
           </div>
-          {modules.map(m => (
+          {sortedModules.map(m => (
             <div key={m.id} className="eq-row">
               <div className="eq-status-dot" style={{ background: dotColor(m.status), ...(m.status === 'crit' ? { animation: 'pulse-r 1s ease infinite' } : {}) }}></div>
               <div className="eq-main">
