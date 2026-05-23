@@ -1,8 +1,10 @@
 'use client';
 import { useEffect, useRef } from 'react';
+import { ModuleData } from '@/lib/data';
 
 interface Props {
   onOpenMap: () => void;
+  modules: ModuleData[];
 }
 
 const WDOTS = [
@@ -16,18 +18,24 @@ const WDOTS = [
   { cls: 'crit', left: 192, top: 124, tt: '#003 N. Katsis — FALL' },
 ];
 
-const EQ_ROWS = [
-  { id: '003', name: 'N. Katsis',   note: 'Fall detected — man-down 08:44', noteColor: 'var(--red)', dotColor: 'var(--red)', dotAnim: true, chipClass: 'chip-crit', chipLabel: 'Alert', batt: 61, battColor: 'var(--amber)' },
-  { id: '009', name: 'A. Tsiotis',  note: 'CO₂ 1240 ppm — limit exceeded',  noteColor: 'var(--amber)', dotColor: 'var(--amber)', dotAnim: false, chipClass: 'chip-warn', chipLabel: 'Warn', batt: 44, battColor: 'var(--amber)' },
-  { id: '001', name: 'G. Pappas',   note: 'Zone A · All sensors normal',    noteColor: 'var(--muted)', dotColor: 'var(--green)', dotAnim: false, chipClass: 'chip-ok', chipLabel: 'Online', batt: 82, battColor: 'var(--green)' },
-  { id: '004', name: 'M. Lekkas',   note: 'Zone B · All sensors normal',    noteColor: 'var(--muted)', dotColor: 'var(--green)', dotAnim: false, chipClass: 'chip-ok', chipLabel: 'Online', batt: 76, battColor: 'var(--green)' },
-  { id: '005', name: 'S. Dimos',    note: 'Zone C · All sensors normal',    noteColor: 'var(--muted)', dotColor: 'var(--green)', dotAnim: false, chipClass: 'chip-ok', chipLabel: 'Online', batt: 95, battColor: 'var(--green)' },
-  { id: '006', name: 'P. Athinos',  note: 'Zone C · All sensors normal',    noteColor: 'var(--muted)', dotColor: 'var(--green)', dotAnim: false, chipClass: 'chip-ok', chipLabel: 'Online', batt: 72, battColor: 'var(--green)' },
-  { id: '008', name: 'V. Chronis',  note: 'Warehouse · All sensors normal', noteColor: 'var(--muted)', dotColor: 'var(--green)', dotAnim: false, chipClass: 'chip-ok', chipLabel: 'Online', batt: 58, battColor: 'var(--amber)' },
-  { id: '007', name: 'Unassigned',  note: 'No worker paired this shift',    noteColor: 'var(--muted)', dotColor: 'var(--muted)', dotAnim: false, chipClass: 'chip-off', chipLabel: 'Offline', batt: null, battColor: '' },
-];
+function chipClass(s: string) {
+  return s === 'crit' ? 'chip-crit' : s === 'warn' ? 'chip-warn' : s === 'ok' ? 'chip-ok' : 'chip-off';
+}
+function chipLabel(s: string) {
+  return s === 'crit' ? 'Alert' : s === 'warn' ? 'Warn' : s === 'ok' ? 'Online' : 'Offline';
+}
+function dotColor(s: string) {
+  return s === 'crit' ? 'var(--red)' : s === 'warn' ? 'var(--amber)' : s === 'ok' ? 'var(--green)' : 'var(--muted)';
+}
+function battColor(b: number | null) {
+  if (b === null) return '';
+  return b > 60 ? 'var(--green)' : b > 30 ? 'var(--amber)' : 'var(--red)';
+}
+function noteColor(s: string) {
+  return s === 'crit' ? 'var(--red)' : s === 'warn' ? 'var(--amber)' : 'var(--muted)';
+}
 
-export default function SitePage({ onOpenMap }: Props) {
+export default function SitePage({ onOpenMap, modules }: Props) {
   const ringRef = useRef<SVGCircleElement>(null);
 
   useEffect(() => {
@@ -43,26 +51,28 @@ export default function SitePage({ onOpenMap }: Props) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  const alertCount  = modules.filter(m => m.status === 'crit').length;
+  const onlineCount = modules.filter(m => m.status !== 'off').length;
+  const totalCount  = modules.length;
+
   return (
     <div className="page active" id="pageSite">
       <div className="content">
-        {/* Tiles */}
         <div className="tiles-row">
           <div className="tile">
             <div className="tile-num">12</div>
             <div className="tile-label">Active Workers</div>
           </div>
           <div className="tile">
-            <div className="tile-num" style={{ color: 'var(--red)' }}>1</div>
-            <div className="tile-label">Active Alert</div>
+            <div className="tile-num" style={{ color: alertCount > 0 ? 'var(--red)' : 'var(--ink)' }}>{alertCount}</div>
+            <div className="tile-label">Active Alert{alertCount !== 1 ? 's' : ''}</div>
           </div>
           <div className="tile">
-            <div className="tile-num">11<span style={{ fontSize: 13, color: 'var(--muted)' }}>/12</span></div>
+            <div className="tile-num">{onlineCount}<span style={{ fontSize: 13, color: 'var(--muted)' }}>/{totalCount}</span></div>
             <div className="tile-label">Modules Online</div>
           </div>
         </div>
 
-        {/* Score card */}
         <div className="score-card">
           <div className="score-ring-wrap">
             <svg viewBox="0 0 72 72">
@@ -81,7 +91,6 @@ export default function SitePage({ onOpenMap }: Props) {
           </div>
         </div>
 
-        {/* Map card */}
         <div className="map-card">
           <div className="map-header">
             <div className="map-title">Site Blueprint</div>
@@ -110,26 +119,25 @@ export default function SitePage({ onOpenMap }: Props) {
           </div>
         </div>
 
-        {/* Equipment Status */}
         <div className="eq-card">
           <div className="eq-header">
             <div className="eq-title">Equipment Status</div>
-            <div className="eq-count">7 shown · 12 total</div>
+            <div className="eq-count">{modules.length} modules</div>
           </div>
-          {EQ_ROWS.map((r) => (
-            <div key={r.id} className="eq-row">
-              <div className="eq-status-dot" style={{ background: r.dotColor, ...(r.dotAnim ? { animation: 'pulse-r 1s ease infinite' } : {}) }}></div>
+          {modules.map(m => (
+            <div key={m.id} className="eq-row">
+              <div className="eq-status-dot" style={{ background: dotColor(m.status), ...(m.status === 'crit' ? { animation: 'pulse-r 1s ease infinite' } : {}) }}></div>
               <div className="eq-main">
-                <div className="eq-id">#{r.id}</div>
-                <div className="eq-name" style={r.id === '007' ? { color: 'var(--muted)' } : {}}>{r.name}</div>
-                <div className="eq-note" style={{ color: r.noteColor }}>{r.note}</div>
+                <div className="eq-id">#{m.id}</div>
+                <div className="eq-name" style={m.status === 'off' ? { color: 'var(--muted)' } : {}}>{m.worker}</div>
+                <div className="eq-note" style={{ color: noteColor(m.status) }}>{m.note}</div>
               </div>
               <div className="eq-right">
-                <div className={`chip ${r.chipClass}`}>{r.chipLabel}</div>
-                {r.batt !== null ? (
+                <div className={`chip ${chipClass(m.status)}`}>{chipLabel(m.status)}</div>
+                {m.batt !== null ? (
                   <div className="batt-row">
-                    <div className="batt-bar"><div className="batt-fill" style={{ width: `${r.batt}%`, background: r.battColor }}></div></div>
-                    <span className="batt-pct">{r.batt}%</span>
+                    <div className="batt-bar"><div className="batt-fill" style={{ width: `${m.batt}%`, background: battColor(m.batt) }}></div></div>
+                    <span className="batt-pct">{m.batt}%</span>
                   </div>
                 ) : <span className="batt-pct">—</span>}
               </div>

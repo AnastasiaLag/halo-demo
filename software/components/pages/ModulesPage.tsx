@@ -42,11 +42,16 @@ interface ToggleState {
 
 interface Props {
   onToast: (msg: string) => void;
+  liveModules?: ModuleData[];
 }
 
-export default function ModulesPage({ onToast }: Props) {
+export default function ModulesPage({ onToast, liveModules }: Props) {
   const [activeTab, setActiveTab] = useState(0);
-  const [modules, setModules] = useState<ModuleData[]>([...MOD_DATA]);
+  const [modules, setModules] = useState<ModuleData[]>(liveModules ? [...liveModules] : [...MOD_DATA]);
+
+  useEffect(() => {
+    if (liveModules) setModules([...liveModules]);
+  }, [liveModules]);
   const [removing, setRemoving] = useState<string | null>(null);
   const [sliders, setSliders] = useState<SliderState>({ CO2: 1000, Fall: 45, Temp: 38, Ergo: 30, Timer: 30 });
   const [toggles, setToggles] = useState<ToggleState>({ Buzzer: true, Push: true, NearMiss: true, Privacy: true, Report: false });

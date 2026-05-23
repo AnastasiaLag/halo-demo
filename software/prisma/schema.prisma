@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Module {
+  id        String   @id
+  worker    String
+  status    String
+  note      String
+  batt      Int?
+  updatedAt DateTime @updatedAt
+  alerts    Alert[]
+}
+
+model Alert {
+  id        Int      @id @default(autoincrement())
+  moduleId  String
+  module    Module   @relation(fields: [moduleId], references: [id])
+  type      String
+  createdAt DateTime @default(now())
+}
