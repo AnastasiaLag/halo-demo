@@ -50,6 +50,7 @@ export default function Home() {
 
   const simulateAlert = async (moduleId: string, type: 'fall' | 'gas') => {
     setDemoOpen(false);
+    setNotifOpen(true);
     try {
       const res = await fetch('/api/alert', {
         method: 'POST',
